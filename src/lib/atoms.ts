@@ -4,6 +4,7 @@ import { v4 } from "uuid";
 
 export const expenseAtom = atom({
   id: v4(),
+  userId: "",
   title: "",
   description: "",
   amount: 0,
@@ -22,6 +23,7 @@ export const expTypesAtom = atom([
 
 type Expense = {
   id: string;
+  userId?: string;
   title: string;
   description: string;
   amount: number;

@@ -11,6 +11,8 @@ import {
 import { expenseAtom, expTypesAtom, expensesAtom } from "@/lib/atoms";
 import { useAtom } from "jotai";
 import { v4 } from "uuid";
+import axios from "axios";
+import { useEffect } from "react";
 
 export default function ExpenseForm() {
   const [expense, setExpense] = useAtom(expenseAtom);
@@ -25,15 +27,49 @@ export default function ExpenseForm() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const populateStorage = async () => {
+    const userId = localStorage.getItem("userId");
+    try {
+      if (!userId) {
+        console.warn("User ID not found in localStorage");
+        return;
+      }
+      const storedExpenses = await axios.post("/api/expenses/show", { userId });
+      if (storedExpenses.status === 200) {
+        setExpenses(storedExpenses.data);
+      }
+    } catch (err) {
+      console.error("Error populating storage:", err);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       console.log(expense);
-      setExpenses((prev) => [...prev, expense]);
+      const data = {
+        ...expense,
+        id: v4(),
+        userId: localStorage.getItem("userId") || "", // Ensure userId is set
+      };
+      const response = await axios.post(`/api/expenses/add`, {
+        id: data.id,
+        userId: data.userId,
+        title: data.title,
+        description: data.description,
+        amount: data.amount,
+        date: data.date,
+        type: data.type,
+      });
+      if (response.status !== 201) {
+        throw new Error("Failed to add expense");
+      }
       alert("Expense added successfully!");
+      setExpenses((prev) => [...prev, data]);
       console.log(expenses);
       setExpense({
         id: v4(),
+        userId: localStorage.getItem("userId")!,
         title: "",
         description: "",
         amount: 0,
@@ -44,6 +80,10 @@ export default function ExpenseForm() {
       console.error("Error submitting expense:", err);
     }
   };
+
+  useEffect(() => {
+    populateStorage();
+  }, []);
 
   return (
     <form

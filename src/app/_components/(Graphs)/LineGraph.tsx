@@ -41,6 +41,7 @@ export function LineGraph() {
       startOfWeek.setDate(today.getDate() - today.getDay());
       const endOfWeek = new Date(today);
       endOfWeek.setDate(today.getDate() + (6 - today.getDay()));
+      console.log(startOfWeek, endOfWeek);
 
       const weeklyExpenses = expenses.filter((expense) => {
         const expenseDate = new Date(expense.date);
