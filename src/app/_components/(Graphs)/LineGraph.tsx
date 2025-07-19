@@ -37,11 +37,18 @@ export function LineGraph() {
   const calculateWeeklyExpense = () => {
     try {
       const today = new Date();
+
+      // Set start of the week to Sunday at 00:00:00
       const startOfWeek = new Date(today);
       startOfWeek.setDate(today.getDate() - today.getDay());
+      startOfWeek.setHours(0, 0, 0, 0);
+
+      // Set end of the week to Saturday at 23:59:59
       const endOfWeek = new Date(today);
       endOfWeek.setDate(today.getDate() + (6 - today.getDay()));
-      console.log(startOfWeek, endOfWeek);
+      endOfWeek.setHours(23, 59, 59, 999);
+
+      console.log("Week range:", startOfWeek, endOfWeek);
 
       const weeklyExpenses = expenses.filter((expense) => {
         const expenseDate = new Date(expense.date);
@@ -68,7 +75,7 @@ export function LineGraph() {
       for (const expense of weeklyExpenses) {
         const expenseDate = new Date(expense.date);
         const dayIndex = expenseDate.getDay();
-        weeklyData[dayIndex].desktop += Number(expense.amount); // Ensure amount is a number
+        weeklyData[dayIndex].desktop += Number(expense.amount);
       }
 
       setChartData(weeklyData);
@@ -83,9 +90,9 @@ export function LineGraph() {
   }, [expenses]);
 
   return (
-    <Card className="w-sm bg-black text-white shadow-lg shadow-black/70 border-1 border-black">
+    <Card className="w-sm bg-gradient-to-br from-black to-gray-800 text-white shadow-lg shadow-black/70 border-1 border-transparent">
       <CardHeader>
-        <CardTitle>Daily Expense</CardTitle>
+        <CardTitle>Weekly Expense</CardTitle>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
@@ -112,7 +119,6 @@ export function LineGraph() {
             <Area
               dataKey="desktop"
               type="natural"
-              fill="var(--color-desktop)"
               fillOpacity={0.4}
               stroke="var(--color-desktop)"
             />

@@ -49,15 +49,17 @@ export function BarGraph() {
   const [chartData, setChartData] = useAtom(monthlyExpense);
   const [expenses] = useAtom(expensesAtom);
 
-  const calculateMonthlyExpense = () => {
+  const calculateYearlyExpense = () => {
     try {
       const today = new Date();
-      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-      const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-      const monthlyExpenses = expenses.filter((expense) => {
+      const currentYear = today.getFullYear();
+
+      // Filter expenses from the current year
+      const yearlyExpenses = expenses.filter((expense) => {
         const expenseDate = new Date(expense.date);
-        return expenseDate >= startOfMonth && expenseDate <= endOfMonth;
+        return expenseDate.getFullYear() === currentYear;
       });
+
       const months = [
         "Jan",
         "Feb",
@@ -72,17 +74,21 @@ export function BarGraph() {
         "Nov",
         "Dec",
       ];
+
       const monthlyData: { month: string; desktop: number }[] = months.map(
         (month) => ({
           month,
           desktop: 0,
         })
       );
-      for (const expense of monthlyExpenses) {
+
+      // Aggregate expenses month-wise
+      for (const expense of yearlyExpenses) {
         const expenseDate = new Date(expense.date);
-        const monthIndex = expenseDate.getMonth();
+        const monthIndex = expenseDate.getMonth(); // 0 for Jan, 11 for Dec
         monthlyData[monthIndex].desktop += Number(expense.amount);
       }
+
       setChartData(monthlyData);
       console.log(monthlyData);
     } catch (err) {
@@ -91,11 +97,11 @@ export function BarGraph() {
   };
 
   useEffect(() => {
-    calculateMonthlyExpense();
+    calculateYearlyExpense();
   }, [expenses]);
 
   return (
-    <Card className="w-md bg-black text-white shadow-lg shadow-black/70 border-1 border-black">
+    <Card className="w-md bg-gradient-to-br from-black to-gray-800 text-white shadow-lg shadow-black/70 border-1 border-black">
       <CardHeader>
         <CardTitle>Monthly Expense</CardTitle>
       </CardHeader>

@@ -3,6 +3,7 @@
 import { expensesAtom } from "@/lib/atoms";
 import { useAtom } from "jotai";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Select,
   SelectContent,
@@ -12,11 +13,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Funnel } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Funnel, Eye, Trash } from "lucide-react";
+import axios from "axios";
 
 export default function DisplayExpenses() {
-  const [expenses] = useAtom(expensesAtom);
+  const [expenses, setExpenses] = useAtom(expensesAtom);
   const [filteredExpenses, setFilteredExpenses] = useState(expenses); // local filtered state
+  const Router = useRouter();
+
+  useEffect(() => {
+    console.log(expenses);
+  }, [expenses]);
 
   useEffect(() => {
     // Initialize with all expenses on mount
@@ -29,6 +37,23 @@ export default function DisplayExpenses() {
     } else {
       const filtered = expenses.filter((exp) => exp.type === type);
       setFilteredExpenses(filtered);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const cf = confirm("Are you sure you want to delete this expense?");
+      if (!cf) return;
+      const response = await axios.post("/api/expenses/delete", {
+        id: id,
+      });
+      if (response.status === 200) {
+        setFilteredExpenses((prev) => prev.filter((exp) => exp.id !== id));
+        setExpenses((prev) => prev.filter((exp) => exp.id !== id));
+        alert("Expense deleted successfully");
+      }
+    } catch (err) {
+      console.log(err);
     }
   };
 
@@ -55,37 +80,51 @@ export default function DisplayExpenses() {
           </SelectContent>
         </Select>
       </div>
-      <div className="overflow-y-auto h-full w-full max-h-44 p-2">
+      <div className="overflow-y-auto h-full w-full max-h-44 flex flex-col gap-3 p-2">
         {filteredExpenses.length === 0 ? (
           <p className="text-center text-gray-500">No expenses found.</p>
         ) : (
           filteredExpenses.map((expense) => (
-            <span
-              className="flex justify-between items-center bg-yellow-400/70 p-4 rounded-lg mb-2"
+            <Card
               key={expense.id}
+              className="w-full max-w-4xl bg-gradient-to-br from-amber-300 via-yellow-400 to-orange-400 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
             >
-              <div>
-                <h1 className="font-bold">{expense.title}</h1>
-                <p>
-                  {new Date(expense.date).toLocaleString("en-IN", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </p>
-              </div>
-              <div>
-                <h3 className="font-bold flex gap-1.5">
-                  ₹
-                  <p>
-                    {Number(expense.amount).toLocaleString("en-IN", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </p>
-                </h3>
-              </div>
-            </span>
+              <CardContent className="p-3 pl-5 pr-5">
+                <div className="flex justify-between items-start">
+                  <div className="flex flex-col">
+                    <h3 className="text-xl font-bold text-amber-900">
+                      {expense.title}
+                    </h3>
+                    <p className="text-sm font-medium text-amber-800/80 mt-1">
+                      {expense.date}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <p className="text-xl font-bold text-amber-900">
+                      ₹ {expense.amount}
+                    </p>
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        onClick={() => Router.push(`/expense/${expense.id}`)}
+                        className="bg-amber-900/10 px-2 py-1 rounded-full mt-2"
+                      >
+                        <p className="text-xs font-semibold text-amber-900">
+                          <Eye />
+                        </p>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(expense.id)}
+                        className="px-2 py-1 mt-2"
+                      >
+                        <p className="text-xs font-bold text-red-800">
+                          <Trash />
+                        </p>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           ))
         )}
       </div>
